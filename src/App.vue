@@ -1,39 +1,39 @@
 <script>
 import validator from "isin-validator";
-import './index.css'
-import './components/Form/Form.css'
-import './components/Table/Table.css'
-import Header from './components/Header.vue'
-import TextField from './components/TextField.vue'
-import Card from './components/Card.vue'
-import Button from './components/Button.vue'
-
-const isinClean = (isin) => isin.replace(/\s|-/g, "");
+import './index.css';
+import './components/Form/Form.css';
+import './components/Table/Table.css';
+import Header from './components/Header.vue';
+import TextField from './components/TextField.vue';
+import Card from './components/Card.vue';
+import Button from './components/Button.vue';
+import Table from './components/Table/Table.vue';
+import { subscribe, unsubscribe } from "./components/Socket";
 
 let id = 0;
+
+const isinClean = (isin) => isin.replace(/\s|-/g, "");
 
 export default {
   components: {
     Header,
     TextField,
     Card,
-    Button
+    Button,
+    Table,
   },
   data() {
     return {
-
-      text: '',
-      ISIN: [],
-      ws: [],
+      ISIN: '',
+      ws: null,
       isinValue: "",
       error: "",
-      validClass: ""
+      validClass: "",
+      rowData: [],
+      columns: [ 'isin', 'price', 'bid', 'ask' ]
     }
   },
   methods: {
-    onInput(e) {
-      this.text = e.target.value
-    },
     handleValidation(e) {
       const value = isinClean(e.target.value);
       this.isinValue = value;
@@ -65,9 +65,53 @@ export default {
         this.validClass = "error";
         return this.error = "ISIN is already in Watch List";
       }
-      this.ISIN.push(value);
+      this.ISIN = value;
+      // this.sendMessage(value);
       this.isinValue = ""
+      // this.getData(this.ws);
     },
+    getData(ws) {
+      ws.onmessage = function (event) {
+        const message = JSON.parse(event.data);
+        console.log(message, 'message');
+      };
+    },
+    sendMessage(isin) {
+      const msg = {
+        "subscribe": isin
+      }
+      console.log("Hello")
+      console.log(this.ws);
+      this.ws.send(JSON.stringify(msg));
+    },
+    getStream() {
+      console.log("Starting ws to WebSocket Server")
+      this.ws = new WebSocket("ws://159.89.15.214:8080/")
+
+      this.ws.addEventListener("message", (event) => {
+        const parseData = JSON.parse(event.data);
+        // this.rowData.push({id: parseData.isin, value: parseData});
+        // let objIndex = this.rowData.findIndex((obj => obj.id == parseData.isin));
+        this.rowData[id] = parseData;
+        console.log(this.rowData, 'this.rowData');
+      })
+
+      this.ws.onopen = function (event) {
+
+        console.log(event, 'onopen')
+        console.log("Successfully connected to the echo websocket server...")
+      }
+    }
+  },
+  created() {
+    this.getStream();
+  },
+  watch: {
+    ISIN(newIsin, oldIsin) {
+      console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ oldIsin", oldIsin);
+      console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ newIsin", newIsin);
+      this.sendMessage(newIsin, oldIsin)
+    }
   }
 }
 
@@ -87,6 +131,29 @@ export default {
     </form>
     <p className="invalid-error">{{error ? error : null}}</p>
     <p className="info">Ex: US0378330015, US0004026250 or DE000BASF111</p>
+    <div className="table-section">
+      <div className="container">
+        <div className="row">
+          <div className="col-sm-8">
+            <h2>ISIN WatchList</h2>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th v-for="(column, index) in columns" :key="index"> {{column}}</th>
+                  <th>Bid-Ask Spread</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, index) in rowData" :key="index">
+                  <td v-for="(column, indexColumn) in columns" :key="indexColumn">{{row[column]}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
     <li v-for="item in ISIN" :key="item.id">
       {{ item.value }}
     </li>
@@ -100,7 +167,6 @@ export default {
       </p>
     </Card>
     <Button text="Button Label" />
-    <!-- <WebSocket /> -->
   </main>
 </template>
 
