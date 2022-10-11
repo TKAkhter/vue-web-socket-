@@ -10,7 +10,7 @@ import Button from './components/Button.vue';
 import Table from './components/Table/Table.vue';
 import { subscribe, unsubscribe } from "./components/Socket";
 
-let id = 0;
+let id = -1;
 
 const isinClean = (isin) => isin.replace(/\s|-/g, "");
 
@@ -24,13 +24,13 @@ export default {
   },
   data() {
     return {
-      ISIN: '',
+      ISIN: [],
       ws: null,
       isinValue: "",
       error: "",
       validClass: "",
       rowData: [],
-      columns: [ 'isin', 'price', 'bid', 'ask' ]
+      columns: ['isin', 'price', 'bid', 'ask']
     }
   },
   methods: {
@@ -65,7 +65,8 @@ export default {
         this.validClass = "error";
         return this.error = "ISIN is already in Watch List";
       }
-      this.ISIN = value;
+      id++;
+      this.ISIN.push(value);
       // this.sendMessage(value);
       this.isinValue = ""
       // this.getData(this.ws);
@@ -92,8 +93,24 @@ export default {
         const parseData = JSON.parse(event.data);
         // this.rowData.push({id: parseData.isin, value: parseData});
         // let objIndex = this.rowData.findIndex((obj => obj.id == parseData.isin));
-        this.rowData[id] = parseData;
-        console.log(this.rowData, 'this.rowData');
+        if (id === 0) {
+          this.rowData[id] = parseData;
+        } else {
+          for (let i = 0; i < this.ISIN.length; i++) {
+            console.log(this.ISIN[i], 'ii');
+            console.log(parseData, 'id.this.rowData[i]');
+            //Do something
+            console.log(this.rowData, 'id.this.rowData[idx]');
+            if (this.ISIN[i] == parseData.isin) {
+              this.rowData[i] = parseData;
+            }
+          }
+        }
+
+        // this.rowData[id] = parseData;
+        // console.log(this.rowData, 'this.rowData');
+        // console.log(id, 'id.rowData');
+        // console.log(this.ISIN, 'id.rowData');
       })
 
       this.ws.onopen = function (event) {
@@ -107,10 +124,21 @@ export default {
     this.getStream();
   },
   watch: {
-    ISIN(newIsin, oldIsin) {
-      console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ oldIsin", oldIsin);
-      console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ newIsin", newIsin);
-      this.sendMessage(newIsin, oldIsin)
+    ISIN: {
+      handler: function (val) {
+        let vm = this;
+        val.filter(function (p, idx) {
+          return Object.keys(p).some(function (prop) {
+            let diff = p[prop] !== vm.ISIN[idx][prop];
+            if (diff) {
+              p.changed = true;
+            }
+          })
+        });
+        console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ oldIsin", val);
+        this.sendMessage(val)
+      },
+      deep: true
     }
   }
 }
@@ -147,6 +175,8 @@ export default {
               <tbody>
                 <tr v-for="(row, index) in rowData" :key="index">
                   <td v-for="(column, indexColumn) in columns" :key="indexColumn">{{row[column]}}</td>
+                  <td>{{(row['ask']- row['bid'])/row['ask']}}</td>
+                  <td></td>
                 </tr>
               </tbody>
             </table>
