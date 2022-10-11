@@ -22,6 +22,7 @@ form {
     border-radius: 5px;
     background: #ffffff;
     font-family: "Urbanist", sans-serif;
+    pointer-events: all;
   }
   
   .input-box input:active,
