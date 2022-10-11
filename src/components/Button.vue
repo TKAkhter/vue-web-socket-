@@ -18,28 +18,27 @@ export default {
 </script>
 
 <style>
-.button {
-  padding: 4px 12px;
-  border: none;
-  border-radius: 2px;
-  background: var(--color-primary-blue2);
-  color: var(--color-foreground3);
+.button-row {
+  display: flex;
 }
 
-.button:hover {
-  background: var(--color-primary-blue3);
+.button-row input,
+.button-row button,
+button {
+  font-family: 'Urbanist', sans-serif;
+  padding: 15px;
+  border: 0px;
+  background: #002244;
+  color: #fff;
+  outline: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+  font-size: 18px;
 }
 
-.button:active {
-  background: var(--color-primary-blue1);
+button * {
+  color: #fff;
 }
 
-.button:disabled {
-  background: var(--color-primary-blue1);
-}
-
-.button:disabled .button-content {
-  color: var(--app-foreground1);
-  cursor: not-allowed;
-}
 </style>

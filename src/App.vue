@@ -1,6 +1,7 @@
 <script>
 import validator from "isin-validator";
 import './index.css';
+import './App.css';
 import './components/Form/Form.css';
 import './components/Table/Table.css';
 import Header from './components/Header.vue';
@@ -8,7 +9,6 @@ import TextField from './components/TextField.vue';
 import Card from './components/Card.vue';
 import Button from './components/Button.vue';
 import Table from './components/Table/Table.vue';
-import { subscribe, unsubscribe } from "./components/Socket";
 
 let id = -1;
 
@@ -67,22 +67,24 @@ export default {
       }
       id++;
       this.ISIN.push(value);
-      // this.sendMessage(value);
       this.isinValue = ""
-      // this.getData(this.ws);
+      this.validClass = "";
     },
-    getData(ws) {
-      ws.onmessage = function (event) {
-        const message = JSON.parse(event.data);
-        console.log(message, 'message');
-      };
+    deleteRow(idx) {
+      this.stopMessage(this.ISIN[idx]);
+      this.ISIN.splice(idx, 1);
+      this.rowData.splice(idx, 1);
     },
     sendMessage(isin) {
       const msg = {
         "subscribe": isin
       }
-      console.log("Hello")
-      console.log(this.ws);
+      this.ws.send(JSON.stringify(msg));
+    },
+    stopMessage(isin) {
+      const msg = {
+        "unsubscribe": isin
+      }
       this.ws.send(JSON.stringify(msg));
     },
     getStream() {
@@ -91,33 +93,36 @@ export default {
 
       this.ws.addEventListener("message", (event) => {
         const parseData = JSON.parse(event.data);
-        // this.rowData.push({id: parseData.isin, value: parseData});
-        // let objIndex = this.rowData.findIndex((obj => obj.id == parseData.isin));
         if (id === 0) {
           this.rowData[id] = parseData;
+          console.log(this.rowData, 'single stream');
         } else {
           for (let i = 0; i < this.ISIN.length; i++) {
-            console.log(this.ISIN[i], 'ii');
-            console.log(parseData, 'id.this.rowData[i]');
-            //Do something
-            console.log(this.rowData, 'id.this.rowData[idx]');
             if (this.ISIN[i] == parseData.isin) {
               this.rowData[i] = parseData;
+              console.log(this.rowData, 'multi stream');
             }
           }
         }
-
-        // this.rowData[id] = parseData;
-        // console.log(this.rowData, 'this.rowData');
-        // console.log(id, 'id.rowData');
-        // console.log(this.ISIN, 'id.rowData');
       })
 
       this.ws.onopen = function (event) {
-
-        console.log(event, 'onopen')
         console.log("Successfully connected to the echo websocket server...")
       }
+
+      this.ws.addEventListener("close", (event) => {
+        alert(
+          "Prices are out of Sync.App is trying to reconnect. If price doesn't change, Please reload page"
+        );
+        console.log(
+          "Socket is closed. Reconnect will be attempted in 5 seconds",
+          event.reason
+        );
+        this.getStream();
+        this.ws.addEventListener("open", () => {
+          this.sendMessage(this.ISIN);
+        })
+      });
     }
   },
   created() {
@@ -135,7 +140,6 @@ export default {
             }
           })
         });
-        console.log("🚀 ~ file: App.vue ~ line 103 ~ ISIN ~ oldIsin", val);
         this.sendMessage(val)
       },
       deep: true
@@ -148,6 +152,10 @@ export default {
 <template>
   <Header />
   <main class="main">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     <form @submit.prevent="handleSubmit">
       <div className="input-box">
         <input :class="validClass" placeholder="Enter ISIN to add on Wishlist" name="isin" type="text"
@@ -176,7 +184,7 @@ export default {
                 <tr v-for="(row, index) in rowData" :key="index">
                   <td v-for="(column, indexColumn) in columns" :key="indexColumn">{{row[column]}}</td>
                   <td>{{(row['ask']- row['bid'])/row['ask']}}</td>
-                  <td></td>
+                  <td><button @click="deleteRow(index)">X</button></td>
                 </tr>
               </tbody>
             </table>
@@ -210,6 +218,7 @@ export default {
 .main {
   max-width: var(--max-width);
   margin: 0 auto;
+  padding: 24px;
 }
 
 .component-list {
