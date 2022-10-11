@@ -1,14 +1,13 @@
 <script>
 import validator from "isin-validator";
 import './index.css';
-import './App.css';
-import './components/Form/Form.css';
-import './components/Table/Table.css';
 import Header from './components/Header.vue';
 import TextField from './components/TextField.vue';
 import Card from './components/Card.vue';
 import Button from './components/Button.vue';
-import Table from './components/Table/Table.vue';
+// import Table from './components/Table/Table.vue';
+import Alert from './components/Alert.vue'
+import Form from './components/Form.vue'
 
 let id = -1;
 
@@ -19,18 +18,20 @@ export default {
     Header,
     TextField,
     Card,
+    Form,
     Button,
-    Table,
+    Alert,
   },
   data() {
     return {
       ISIN: [],
+      alert: false,
       ws: null,
       isinValue: "",
       error: "",
       validClass: "",
       rowData: [],
-      columns: ['isin', 'price', 'bid', 'ask']
+      columns: ['price', 'bid', 'ask']
     }
   },
   methods: {
@@ -111,16 +112,15 @@ export default {
       }
 
       this.ws.addEventListener("close", (event) => {
-        alert(
-          "Prices are out of Sync.App is trying to reconnect. If price doesn't change, Please reload page"
-        );
+        this.alert = true;
         console.log(
-          "Socket is closed. Reconnect will be attempted in 5 seconds",
+          "Socket is closed. Trying to Reconnect...",
           event.reason
         );
         this.getStream();
         this.ws.addEventListener("open", () => {
           this.sendMessage(this.ISIN);
+          this.alert = false;
         })
       });
     }
@@ -152,19 +152,8 @@ export default {
 <template>
   <Header />
   <main class="main">
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <strong>Holy guacamole!</strong> You should check in on some of those fields below.
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <form @submit.prevent="handleSubmit">
-      <div className="input-box">
-        <input :class="validClass" placeholder="Enter ISIN to add on Wishlist" name="isin" type="text"
-          :value="isinValue" @input="handleValidation" />
-      </div>
-      <div className="button-row">
-        <Button type="submit" text="Button Label" />
-      </div>
-    </form>
+    <Alert v-if="alert" />
+    <Form :handleSubmit="handleSubmit" :isinValue="isinValue" :handleValidation="handleValidation" />
     <p className="invalid-error">{{error ? error : null}}</p>
     <p className="info">Ex: US0378330015, US0004026250 or DE000BASF111</p>
     <div className="table-section">
@@ -175,6 +164,7 @@ export default {
             <table className="table">
               <thead>
                 <tr>
+                  <th>ISIN</th>
                   <th v-for="(column, index) in columns" :key="index"> {{column}}</th>
                   <th>Bid-Ask Spread</th>
                   <th>Action</th>
@@ -182,29 +172,19 @@ export default {
               </thead>
               <tbody>
                 <tr v-for="(row, index) in rowData" :key="index">
-                  <td v-for="(column, indexColumn) in columns" :key="indexColumn">{{row[column]}}</td>
-                  <td>{{(row['ask']- row['bid'])/row['ask']}}</td>
-                  <td><button @click="deleteRow(index)">X</button></td>
+                  <td>{{row['isin']}}</td>
+                  <td v-for="(column, indexColumn) in columns" :key="indexColumn">{{parseFloat(row[column]).toFixed(3)}}
+                  </td>
+                  <td>{{(parseFloat(row['ask']- row['bid'])/row['ask']).toFixed(5)}}</td>
+                  <td><button class="delete-button" @click="deleteRow(index)">X</button></td>
                 </tr>
               </tbody>
             </table>
+            <!-- <Table :rowData="rowData" :columns="columns" :deleteRow="deleteRow" /> -->
           </div>
         </div>
       </div>
     </div>
-    <li v-for="item in ISIN" :key="item.id">
-      {{ item.value }}
-    </li>
-    <TextField placeholder="Placeholder" />
-    <Card>
-      <p>Generic card content</p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis ex, totam ducimus quam eligendi quasi
-        laborum optio, tenetur, aperiam reprehenderit voluptates? A velit quia inventore amet excepturi pariatur
-        praesentium. Quibusdam.
-      </p>
-    </Card>
-    <Button text="Button Label" />
   </main>
 </template>
 
@@ -221,7 +201,62 @@ export default {
   padding: 24px;
 }
 
-.component-list {
-  padding: 0 0 0 12px;
+.table-section {
+  padding: 20px;
+  background-color: #fff;
+  margin: 40px;
+  border-radius: 5px;
+  box-shadow: 0px 4px 4px rgb(0 0 0 / 25%);
+  overflow-x: auto;
+}
+
+.table-section h2 {
+  color: #000000;
+  padding-bottom: 10px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  display: block;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.table {
+  width: 100%;
+  text-align: center;
+}
+
+.table th {
+  font-size: 20px;
+  text-transform: capitalize;
+  padding: 10px 5px;
+  /* border: 1px solid; */
+  background: #041e42;
+  color: #fff;
+  font-weight: 500;
+}
+
+.table td {
+  padding: 10px 5px;
+  font-size: 18px;
+  width: 20%;
+}
+
+.table tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+table thead tr th:first-child {
+  border-top-left-radius: 5px;
+}
+
+table thead tr th:last-child {
+  border-top-right-radius: 5px;
+}
+
+table tbody:last-child tr:last-child td:first-child {
+  border-bottom-left-radius: 5px;
+}
+
+table tbody:last-child tr:last-child td:last-child {
+  border-bottom-right-radius: 5px;
 }
 </style>

@@ -29,6 +29,7 @@
 .header .header-logo {
   width: 60px;
 }
+
 .heading h2 {
   font-size: 35px;
   font-weight: 500;
