@@ -9,6 +9,7 @@
     "test": "echo \n\nReplace this command with your own test runner.\n\n"
   },
   "dependencies": {
+    "isin-validator": "^1.1.1",
     "vue": "^3.2.25"
   },
   "devDependencies": {
