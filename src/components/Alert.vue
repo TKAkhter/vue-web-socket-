@@ -1,7 +1,7 @@
 <template>
   <div class="alert alert-danger alert-dismissible fade show" role="alert">
     <strong>Reconnecting... </strong>Prices are out of Sync. App is trying to reconnect. If watch list doesn't change,
-    Please reload page.
+    Please reload page. Don't Worry your watch list is saved.
   </div>
 </template>
   

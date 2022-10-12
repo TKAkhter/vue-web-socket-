@@ -5,7 +5,6 @@ import Header from './components/Header.vue';
 import TextField from './components/TextField.vue';
 import Card from './components/Card.vue';
 import Button from './components/Button.vue';
-// import Table from './components/Table/Table.vue';
 import Alert from './components/Alert.vue'
 import Form from './components/Form.vue'
 
@@ -125,9 +124,6 @@ export default {
           this.sendMessage(this.ISIN);
           this.alert = false;
         })
-        // this.ws.onopen = () => this.sendMessage(this.ISIN);
-        // this.alert = false;
-        // this.sendMessage(this.ISIN);
       });
     }
   },
@@ -198,7 +194,6 @@ export default {
                 </tr>
               </tbody>
             </table>
-            <!-- <Table :rowData="rowData" :columns="columns" :deleteRow="deleteRow" /> -->
           </div>
         </div>
       </div>
@@ -222,7 +217,6 @@ export default {
 .table-section {
   padding: 20px;
   background-color: #fff;
-  margin: 40px;
   border-radius: 5px;
   box-shadow: 0px 4px 4px rgb(0 0 0 / 25%);
   overflow-x: auto;
