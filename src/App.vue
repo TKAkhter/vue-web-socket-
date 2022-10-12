@@ -68,6 +68,7 @@ export default {
       }
       id++;
       this.ISIN.push(value);
+      localStorage.setItem('ISIN', JSON.stringify(this.ISIN));
       this.isinValue = ""
       this.validClass = "";
     },
@@ -75,6 +76,7 @@ export default {
       this.stopMessage(this.ISIN[idx]);
       this.ISIN.splice(idx, 1);
       this.rowData.splice(idx, 1);
+      localStorage.setItem('ISIN', JSON.stringify(this.ISIN));
     },
     sendMessage(isin) {
       const msg = {
@@ -87,6 +89,7 @@ export default {
         "unsubscribe": isin
       }
       this.ws.send(JSON.stringify(msg));
+      // this.ws.onopen = () => this.ws.send(JSON.stringify(msg));
     },
     getStream() {
       console.log("Starting ws to WebSocket Server")
@@ -107,9 +110,9 @@ export default {
         }
       })
 
-      this.ws.onopen = function (event) {
+      this.ws.onopen = function () {
         console.log("Successfully connected to the echo websocket server...")
-      }
+      };
 
       this.ws.addEventListener("close", (event) => {
         this.alert = true;
@@ -122,11 +125,26 @@ export default {
           this.sendMessage(this.ISIN);
           this.alert = false;
         })
+        // this.ws.onopen = () => this.sendMessage(this.ISIN);
+        // this.alert = false;
+        // this.sendMessage(this.ISIN);
       });
     }
   },
   created() {
+    
+  },
+  mounted() {
+    const storeISIN = JSON.parse(localStorage.getItem('ISIN'));
+    if(!storeISIN) return;
     this.getStream();
+    for (let i = 0; i < storeISIN.length; i++) {
+      this.ws.addEventListener("open", () => {
+        id++;
+        console.log(storeISIN[i],'storeISIN');
+        this.ISIN.push(storeISIN[i]);
+      });
+    }
   },
   watch: {
     ISIN: {

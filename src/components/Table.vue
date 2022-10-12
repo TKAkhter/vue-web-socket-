@@ -6,11 +6,6 @@ export default {
         columns: Array,
         deleteRow: Function
     },
-    mounted() {
-        console.log("🚀 ~ file: Table.vue ~ line 21 ~ deleteTableRows ~ e", this.columns);
-
-        console.log("🚀 ~ file: Table.vue ~ line 21 ~ deleteTableRows ~ e", this.rowsData);
-    },
 }
 </script>
 <template>
